@@ -9,7 +9,7 @@
 
 -- Imports
 import Prelude hiding (null, lookup, map, filter)
-import Data.Map.Lazy hiding (sort,map,foldl)
+import Data.Map  hiding (sort,map,foldl)
 import Data.Char
 import Data.List 
 import System.IO
@@ -29,6 +29,15 @@ data Token = Word String |
 -- Line
 type Line = [Token]
 
+-- Mapeado de Separaciones Correctas
+type HypMap = Data.Map.Map String [String]
+
+{- Ejemplo de Mapa creado 
+enHyp :: HypMap
+enHyp = Data.Map.fromList [ ("controla",["con","tro","la"]), 
+                            ("futuro",["fu","tu","ro"]),
+                            ("presente",["pre","sen","te"])]
+-}
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -91,7 +100,7 @@ lineLength linea = largo where
 
 
 -------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------- D) breakLine  ---------------------------------------------------------------
+------------------------------------------------------- E) breakLine  ---------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------
 --E: Un Int y una Linea
 --S: Una tupla de Lineas
@@ -99,7 +108,21 @@ lineLength linea = largo where
 
 breakLine :: Int -> Line -> (Line,Line)
 breakLine limite linea = lineas where
-    lineas = ([],[])
+    lineas = breakLineAux limite linea []
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------- F) mergers  -----------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------
+--E: Un Lista de Strings
+--S: Un Lista de tuplas de Strings
+--D: Dada una lista con diversas tiras y retorne un lista con las posibles combinaciones en orden de dichas tiras 
+
+mergers :: [String] -> [(String,String)]
+mergers lista = 
+    if length lista == 1 || length lista == 0
+        then []
+    else mergerCleaner (mergersAux lista 1)
 
 
 -------------------------------------------------------------- Funciones Auxiliares --------------------------------------------------------------
@@ -139,8 +162,29 @@ blankChecker texto =
 --S: Una tupla de Lineas
 --D: Dado un limite por linea dividir la linea en 2 para que no se exceda dicho limite
 
-breakLineAux :: Int -> Line -> (Line,Line)
-breakLineAux limite linea =
-    if (limite - tokenLength (head linea) >= 0)
-        then breakLineAux (limite - tokenLength (head linea)) linea
-    else ([],[])
+breakLineAux :: Int -> Line -> Line -> (Line,Line)
+breakLineAux limite linea respuesta =
+    if (Data.List.null linea)
+        then (respuesta,linea)
+    else if (limite - tokenLength (head linea) >= 0)
+        then breakLineAux (limite - tokenLength (head linea)) (Data.List.drop 1 linea) (respuesta ++ [head linea])
+    else (respuesta,linea)
+
+--E: Un Lista de Strings, un Int y un Lista de tuplas de String
+--S: una lista de tuplas de lista de string
+--D: Dada una lista con diversas tiras y retorne un lista con las posibles combinaciones en orden de dichas tiras
+
+mergersAux :: [String] -> Int -> [([String],[String])]
+mergersAux lista itr =
+    if itr == (length lista)
+        then []
+    else [(Data.List.splitAt itr lista)] ++ mergersAux lista (itr+1)
+
+--E: una lista de tuplas de lista de string
+--S: una lista de tuplas de String
+--D: Arregla el formato de la lsita pasada
+
+mergerCleaner :: [([String],[String])] -> [(String,String)]
+mergerCleaner [] = []
+mergerCleaner lista = [(intercalate "" (fst (head lista)) , intercalate "" (snd (head lista)))] ++ mergerCleaner (Data.List.drop 1 lista)
+
