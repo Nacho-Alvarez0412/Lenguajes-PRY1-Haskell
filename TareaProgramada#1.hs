@@ -9,9 +9,10 @@
 
 -- Imports
 import Prelude hiding (null, lookup, map, filter)
-import Data.Map  hiding (sort,map,foldl)
+import Data.Map as Map  hiding (sort,map,foldl)
+import Data.Maybe as Maybe
 import Data.Char
-import Data.List 
+import Data.List as List
 import System.IO
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,14 +31,14 @@ data Token = Word String |
 type Line = [Token]
 
 -- Mapeado de Separaciones Correctas
-type HypMap = Data.Map.Map String [String]
+type HypMap = Map.Map String [String]
 
-{- Ejemplo de Mapa creado 
+-- Ejemplo de Mapa creado 
 enHyp :: HypMap
-enHyp = Data.Map.fromList [ ("controla",["con","tro","la"]), 
-                            ("futuro",["fu","tu","ro"]),
+enHyp = Map.fromList [ ("controla",["con","tro","la"]), 
+                            ("futuro",["fu",",tu","ro"]),
                             ("presente",["pre","sen","te"])]
--}
+
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,6 +125,19 @@ mergers lista =
         then []
     else mergerCleaner (mergersAux lista 1)
 
+-------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------- g) hyphenate   --------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------
+--E: Un HypMap y un Token 
+--S: Una Lista de Tuples de Tokens
+--D: Dado un mapa y un token, retorna las diversas formas en las que ese Token puede ser separado
+
+hyphenate :: HypMap -> Token -> [(Token,Token)]
+hyphenate map palabra = res where
+    strPalabra = getString palabra
+    division = Map.lookup strPalabra map
+    strWord = maybe2StringArray division  
+    res = hyphenateAux strWord
 
 -------------------------------------------------------------- Funciones Auxiliares --------------------------------------------------------------
 
@@ -142,7 +156,7 @@ getString (HypWord texto) = texto++"-"
 cleanText :: String -> String
 cleanText texto =
     if (head texto) == ' '
-        then cleanText (Data.List.drop 1 texto)
+        then cleanText (List.drop 1 texto)
     else if (last texto) == ' ' 
         then cleanText (init texto)
     else texto
@@ -164,10 +178,10 @@ blankChecker texto =
 
 breakLineAux :: Int -> Line -> Line -> (Line,Line)
 breakLineAux limite linea respuesta =
-    if (Data.List.null linea)
+    if (List.null linea)
         then (respuesta,linea)
     else if (limite - tokenLength (head linea) >= 0)
-        then breakLineAux (limite - tokenLength (head linea)) (Data.List.drop 1 linea) (respuesta ++ [head linea])
+        then breakLineAux (limite - tokenLength (head linea)) (List.drop 1 linea) (respuesta ++ [head linea])
     else (respuesta,linea)
 
 --E: Un Lista de Strings, un Int y un Lista de tuplas de String
@@ -178,7 +192,7 @@ mergersAux :: [String] -> Int -> [([String],[String])]
 mergersAux lista itr =
     if itr == (length lista)
         then []
-    else [(Data.List.splitAt itr lista)] ++ mergersAux lista (itr+1)
+    else [(List.splitAt itr lista)] ++ mergersAux lista (itr+1)
 
 --E: una lista de tuplas de lista de string
 --S: una lista de tuplas de String
@@ -186,5 +200,35 @@ mergersAux lista itr =
 
 mergerCleaner :: [([String],[String])] -> [(String,String)]
 mergerCleaner [] = []
-mergerCleaner lista = [(intercalate "" (fst (head lista)) , intercalate "" (snd (head lista)))] ++ mergerCleaner (Data.List.drop 1 lista)
+mergerCleaner lista = [(intercalate "" (fst (head lista)) , intercalate "" (snd (head lista)))] ++ mergerCleaner (List.drop 1 lista)
+
+--E: Un Maybe [String]
+--S: Un array de string
+--D: Dado un Maybe [String] verifica su valor y lo trasnforma
+
+maybe2StringArray :: Maybe [String] -> [String]
+maybe2StringArray divWord =
+    if Maybe.isJust divWord
+        then Maybe.fromJust divWord
+    else []
+
+--E: Una lista de tuples de Strings
+--S: Una lista de Tuplas de Tokens [(Token,Token)]
+--D: Dado el total de combinaciones posibles las transforma a Tokens
+
+string2Token :: [(String,String)] -> [(Token,Token)]
+string2Token array =
+    if array == []
+        then []
+    else [ ( HypWord (fst (head array)), Word (snd (head array)) ) ] ++ string2Token (List.drop 1 array)
+
+--E: Un Maybe [String]
+--S: Una lista de Tuplas de Tokens [(Token,Token)]
+--D: Dado un Array de string separados los acomoda por medio del merge y lo convierte en Tokens
+
+hyphenateAux :: [String] -> [(Token,Token)]
+hyphenateAux divWord = res where
+    combinaciones = mergers divWord
+    res = string2Token combinaciones
+
 
