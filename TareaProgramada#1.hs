@@ -144,7 +144,7 @@ hyphenate map palabra = res where
 
 
 -------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------- g) lineBreaks   -------------------------------------------------------------
+------------------------------------------------------- h) lineBreaks   -------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------
 --E: Un HypMap y un Int y una Linea
 --S: Una Lista de Tuples de Lineas
@@ -158,7 +158,7 @@ lineBreaks map limit line = res where
     res = cleanLineBreaks dirtyCombs
 
 -------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------- g) insertBlanks    -------------------------------------------------------------
+------------------------------------------------------- i) insertBlanks    ----------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------
 --E: Una linea y un Int
 --S: Una Linea
@@ -169,7 +169,17 @@ insertBlanks limit [] = []
 insertBlanks limit linea = 
     if List.length linea < 2
         then linea
-    else []    
+    else insertBlanksAux limit linea []   
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------- j) insertBlanks    ----------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------
+--E: Una linea y un Int
+--S: Una Linea
+--D: Dada una linea y un numero de espacios en blanco inserta los espacios en blanco entre cada palabra
+
+
    
 -------------------------------------------------------------- Funciones Auxiliares --------------------------------------------------------------
 
@@ -180,6 +190,14 @@ insertBlanks limit linea =
 isHypWord :: Token -> Bool
 isHypWord (HypWord x)  = True
 isHypWord x = False
+
+--E: Un Token
+--S: Un Bool
+--D: Dado un Token indica si es Blank
+
+isBlank :: Token -> Bool
+isBlank Blank = True
+isBlank x = False
 
 --E: Una Token
 --S: Un String
@@ -328,3 +346,18 @@ cleanLineBreaks combinaciones =
     else if isHypWord (last (init (fst (head combinaciones)))) -- Selecciona el antepenultimo Token del primer Tuple
         then cleanLineBreaks (tail combinaciones)
     else [(head combinaciones)] ++ cleanLineBreaks (tail combinaciones)
+
+
+--E: Una linea y un Int
+--S: Una Linea
+--D: Dada una linea y un numero de espacios en blanco inserta los espacios en blanco entre cada palabra
+
+insertBlanksAux :: Int -> Line -> Line -> Line
+insertBlanksAux limite linea res = 
+   if limite == 0
+       then res ++ linea
+    else if List.length linea == 1
+        then insertBlanksAux limite (res ++ linea) []
+    else if isBlank(head linea)
+        then insertBlanksAux limite (tail linea) (res ++ [Blank])
+    else insertBlanksAux (limite-1) (tail linea) (res++([(head linea)]++[Blank]))
