@@ -37,7 +37,8 @@ type HypMap = Map.Map String [String]
 enHyp :: HypMap
 enHyp = Map.fromList [ ("controla",["con","tro","la"]), 
                             ("futuro",["fu","tu","ro"]),
-                            ("presente",["pre","sen","te"])]
+                            ("presente",["pre","sen","te"]),
+                            ("aquel",["a","quel"])]
 
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -135,13 +136,50 @@ mergers lista =
 hyphenate :: HypMap -> Token -> [(Token,Token)]
 hyphenate map palabra = res where
     strPalabra = getString palabra
-    cleanPalabra = extractPunctuation strPalabra
+    cleanPalabra = extractPunctuation strPalabra ""
     division = Map.lookup (fst cleanPalabra) map
     strWord = maybe2StringArray division
     finalWord = addPunctuation strWord (snd cleanPalabra)
     res = hyphenateAux finalWord
 
+
+-------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------- g) lineBreaks   -------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------
+--E: Un HypMap y un Int y una Linea
+--S: Una Lista de Tuples de Lineas
+--D: Dado un mapa y un limite y una linea se divide la linea de todas formas posibles donde la primera linea no supere el limite dado
+
+lineBreaks :: HypMap -> Int -> Line -> [(Line,Line)]
+lineBreaks map limit line = res where
+    lstCombinations = hyphenate map (last line)
+    lineCombinations = (getLineCombinations (init line) lstCombinations) ++ [line]
+    dirtyCombs = lineBreaksAux limit lineCombinations
+    res = cleanLineBreaks dirtyCombs
+
+-------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------- g) insertBlanks    -------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------
+--E: Una linea y un Int
+--S: Una Linea
+--D: Dada una linea y un numero de espacios en blanco inserta los espacios en blanco entre cada palabra
+
+insertBlanks :: Int ->Line -> Line
+insertBlanks limit [] = []
+insertBlanks limit linea = 
+    if List.length linea < 2
+        then linea
+    else []    
+   
 -------------------------------------------------------------- Funciones Auxiliares --------------------------------------------------------------
+
+--E: Un Token
+--S: Un Bool
+--D: Dado un Token indica si es HypWord
+
+isHypWord :: Token -> Bool
+isHypWord (HypWord x)  = True
+isHypWord x = False
 
 --E: Una Token
 --S: Un String
@@ -159,7 +197,7 @@ getString (HypWord texto) = texto++"-"
 cleanText :: String -> String
 cleanText texto =
     if (head texto) == ' '
-        then cleanText (List.drop 1 texto)
+        then cleanText (tail texto)
     else if (last texto) == ' ' 
         then cleanText (init texto)
     else texto
@@ -183,8 +221,8 @@ breakLineAux :: Int -> Line -> Line -> (Line,Line)
 breakLineAux limite linea respuesta =
     if (List.null linea)
         then (respuesta,linea)
-    else if (limite - tokenLength (head linea) >= 0)
-        then breakLineAux (limite - tokenLength (head linea)) (List.drop 1 linea) (respuesta ++ [head linea])
+    else if (limite - lineLength (respuesta++[head linea]) >= 0)
+        then breakLineAux limite (tail linea) (respuesta ++ [head linea])
     else (respuesta,linea)
 
 --E: Un Lista de Strings, un Int y un Lista de tuplas de String
@@ -203,7 +241,7 @@ mergersAux lista itr =
 
 mergerCleaner :: [([String],[String])] -> [(String,String)]
 mergerCleaner [] = []
-mergerCleaner lista = [(intercalate "" (fst (head lista)) , intercalate "" (snd (head lista)))] ++ mergerCleaner (List.drop 1 lista)
+mergerCleaner lista = [(intercalate "" (fst (head lista)) , intercalate "" (snd (head lista)))] ++ mergerCleaner (tail lista)
 
 --E: Un Maybe [String]
 --S: Un array de string
@@ -223,7 +261,7 @@ string2Token :: [(String,String)] -> [(Token,Token)]
 string2Token array =
     if array == []
         then []
-    else [ ( HypWord (fst (head array)), Word (snd (head array)) ) ] ++ string2Token (List.drop 1 array)
+    else [ ( HypWord (fst (head array)), Word (snd (head array)) ) ] ++ string2Token (tail array)
 
 --E: Un Maybe [String]
 --S: Una lista de Tuplas de Tokens [(Token,Token)]
@@ -234,23 +272,26 @@ hyphenateAux divWord = res where
     combinaciones = mergers divWord
     res = string2Token combinaciones
 
---E: String
+--E: 2 Strings
 --S: Tuple de Strings
 --D: Dado un string verifica y extrae el signo de puntuación en caso de tenerlo
 
-extractPunctuation :: String -> (String,String)
-extractPunctuation palabra =
+extractPunctuation :: String -> String -> (String,String)
+extractPunctuation palabra punctuation =
     if (List.find (==(last palabra)) puntuaciones ) /= Nothing
-        then (init palabra,[last palabra])
-    else (palabra,"")
+        then extractPunctuation (init palabra) (punctuation ++[last palabra])
+    else (palabra,punctuation)
 
---E: Un Maybe [String]
---S: Una lista de Tuplas de Tokens [(Token,Token)]
---D: Dado un Array de string separados los acomoda por medio del merge y lo convierte en Tokens
+--E: 
+--S: Una lista de chars
+--D: Retorna una colección de signos de puntuación
 
 puntuaciones :: [Char]
 puntuaciones = ['!','?',',',':',';','.']
 
+--E: Una lista de Strings y 1 String
+--S: Una lista de Strings
+--D: Retorna la lista de string más el signo de puntuación agregado
 
 addPunctuation :: [String] -> String -> [String]
 addPunctuation word punctuation = res where
@@ -258,3 +299,32 @@ addPunctuation word punctuation = res where
     frstHalf = init word
     res = frstHalf ++ ([final++punctuation])
 
+--E: Una Linea y Un Arry de tuples de Token 
+--S: Una Lista de Lineas
+--D: Dada una Linea y un array con un token separado, retorna un array con las posibles separaciones que puede tener dicho Token
+
+getLineCombinations :: Line -> [(Token,Token)] -> [Line]
+getLineCombinations linea [] = []
+getLineCombinations linea tokens = [linea ++ [fst (head tokens)] ++ [snd (head tokens)]] ++ getLineCombinations linea (tail tokens)
+
+--E: 1 Int y un Array de Lineas
+--S: Una lista de tuples de lineas
+--D: Crea todas las combinaciones posibles de quiebres de linea para cada una de las lineas dadas
+
+lineBreaksAux :: Int -> [Line] -> [(Line,Line)]
+lineBreaksAux limit [] = []
+lineBreaksAux limit lineas = [breakLine limit (head lineas)] ++ lineBreaksAux limit (tail lineas)
+
+--E: Una lista de tuples de lineas
+--S: Una lista de tuples de lineas
+--D: Limpia elo resultado de todas aquellas combinaciones no válidas
+
+cleanLineBreaks :: [(Line,Line)] -> [(Line,Line)]
+cleanLineBreaks combinaciones = 
+    if List.null combinaciones 
+        then []
+    else if List.length (fst (head combinaciones)) < 2
+        then combinaciones
+    else if isHypWord (last (init (fst (head combinaciones)))) -- Selecciona el antepenultimo Token del primer Tuple
+        then cleanLineBreaks (tail combinaciones)
+    else [(head combinaciones)] ++ cleanLineBreaks (tail combinaciones)
