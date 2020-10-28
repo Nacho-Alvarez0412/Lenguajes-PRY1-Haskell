@@ -36,7 +36,7 @@ type HypMap = Map.Map String [String]
 -- Ejemplo de Mapa creado 
 enHyp :: HypMap
 enHyp = Map.fromList [ ("controla",["con","tro","la"]), 
-                            ("futuro",["fu",",tu","ro"]),
+                            ("futuro",["fu","tu","ro"]),
                             ("presente",["pre","sen","te"])]
 
 
@@ -135,15 +135,18 @@ mergers lista =
 hyphenate :: HypMap -> Token -> [(Token,Token)]
 hyphenate map palabra = res where
     strPalabra = getString palabra
-    division = Map.lookup strPalabra map
-    strWord = maybe2StringArray division  
-    res = hyphenateAux strWord
+    cleanPalabra = extractPunctuation strPalabra
+    division = Map.lookup (fst cleanPalabra) map
+    strWord = maybe2StringArray division
+    finalWord = addPunctuation strWord (snd cleanPalabra)
+    res = hyphenateAux finalWord
 
 -------------------------------------------------------------- Funciones Auxiliares --------------------------------------------------------------
 
 --E: Una Token
 --S: Un String
 --D: Dado un Token retorna su contenido en tipo String (Word -> palabra | Blank -> " " | HypWord -> palabra-)
+
 getString :: Token -> String
 getString (Word texto) = texto
 getString (Blank) = ""
@@ -207,7 +210,7 @@ mergerCleaner lista = [(intercalate "" (fst (head lista)) , intercalate "" (snd 
 --D: Dado un Maybe [String] verifica su valor y lo trasnforma
 
 maybe2StringArray :: Maybe [String] -> [String]
-maybe2StringArray divWord =
+maybe2StringArray divWord  =
     if Maybe.isJust divWord
         then Maybe.fromJust divWord
     else []
@@ -231,4 +234,27 @@ hyphenateAux divWord = res where
     combinaciones = mergers divWord
     res = string2Token combinaciones
 
+--E: String
+--S: Tuple de Strings
+--D: Dado un string verifica y extrae el signo de puntuación en caso de tenerlo
+
+extractPunctuation :: String -> (String,String)
+extractPunctuation palabra =
+    if (List.find (==(last palabra)) puntuaciones ) /= Nothing
+        then (init palabra,[last palabra])
+    else (palabra,"")
+
+--E: Un Maybe [String]
+--S: Una lista de Tuplas de Tokens [(Token,Token)]
+--D: Dado un Array de string separados los acomoda por medio del merge y lo convierte en Tokens
+
+puntuaciones :: [Char]
+puntuaciones = ['!','?',',',':',';','.']
+
+
+addPunctuation :: [String] -> String -> [String]
+addPunctuation word punctuation = res where
+    final = last word
+    frstHalf = init word
+    res = frstHalf ++ ([final++punctuation])
 
