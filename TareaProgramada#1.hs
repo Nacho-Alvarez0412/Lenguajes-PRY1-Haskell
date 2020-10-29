@@ -9,36 +9,13 @@
 
 -- Imports
 import Prelude hiding (null, lookup, map, filter)
-import Data.Map as Map  hiding (sort,map,foldl)
 import Data.Maybe as Maybe
 import Data.Char
 import Data.List as List
 import System.IO
+import Data.Map as Map  hiding (sort,map,foldl)
 
------------------------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------------------------------------------------
---                                                        TIPOS ABSTRACTOS DE DATOS                                                          --
------------------------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------------------------------------------------
-
--- Token 
-data Token = Word String |
-             Blank |
-             HypWord String 
-             deriving (Show,Eq);
-
--- Line
-type Line = [Token]
-
--- Mapeado de Separaciones Correctas
-type HypMap = Map.Map String [String]
-
--- Ejemplo de Mapa creado 
-enHyp :: HypMap
-enHyp = Map.fromList [ ("controla",["con","tro","la"]), 
-                            ("futuro",["fu","tu","ro"]),
-                            ("presente",["pre","sen","te"]),
-                            ("aquel",["a","quel"])]
+import TDAs
 
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -173,11 +150,20 @@ insertBlanks limit linea =
 
 
 -------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------- j) insertBlanks    ----------------------------------------------------------
+------------------------------------------------------- j) separarYalinear    ----------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------
---E: Una linea y un Int
---S: Una Linea
---D: Dada una linea y un numero de espacios en blanco inserta los espacios en blanco entre cada palabra
+--E: Un String y un Int
+--S: Una Lista de Strings
+--D: Dada una linea y un limite devuelve una lista de tiras de caracteres que no sean más largas que el tamaño especificado
+
+separarYalinear :: Int -> Bool -> Bool -> String -> [String]
+separarYalinear limite separar ajustar texto = res where
+    linea = string2Line texto
+    divLines = divideLinesInText limite linea separar enHyp
+    adjustedLines = adjustLines limite divLines ajustar
+    fixedText = lines2String adjustedLines
+    res = fixedText
+
 
 
    
@@ -361,3 +347,32 @@ insertBlanksAux limite linea res =
     else if isBlank(head linea)
         then insertBlanksAux limite (tail linea) (res ++ [Blank])
     else insertBlanksAux (limite-1) (tail linea) (res++([(head linea)]++[Blank]))
+
+--E: Una linea Un HypMap y un limite
+--S: Una Lista de lineas 
+--D: Dada una linea un diccionario y un limite te separa todo el texto en lineas menores al numero solicitado
+
+divideLinesInText :: Int -> Line -> Bool -> HypMap -> [Line]
+divideLinesInText limit [] x map = []
+divideLinesInText limit line True map = [fst(head(lineBreaks map limit line))] ++ divideLinesInText limit (snd(head(lineBreaks map limit line))) True map
+divideLinesInText limit line False map =  [fst(last(lineBreaks map limit line))] ++ divideLinesInText limit (snd(last(lineBreaks map limit line))) False map
+
+
+--E: 
+--S: 
+--D: 
+
+adjustLines :: Int -> [Line] -> Bool -> [Line]
+adjustLines limite lineas False = lineas
+adjustLines limite [] x = []
+adjustLines limite lineas True =
+    if lineLength (head lineas) < limite
+        then [insertBlanks (limite - lineLength (head lineas)) (head lineas)] ++ adjustLines limite (tail lineas) True
+    else [(head lineas)] ++ adjustLines limite (tail lineas) True
+
+
+lines2String :: [Line] -> [String]
+lines2String [] = [] 
+lines2String lineas = [line2String (head lineas)] ++ lines2String (tail lineas)
+
+    
