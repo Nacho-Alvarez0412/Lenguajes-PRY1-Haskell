@@ -331,7 +331,10 @@ cleanLineBreaks combinaciones =
         then combinaciones
     else if isHypWord (last (init (fst (head combinaciones)))) -- Selecciona el antepenultimo Token del primer Tuple
         then cleanLineBreaks (tail combinaciones)
+    else if isHypWord (head (snd(head combinaciones)))
+        then cleanLineBreaks (tail combinaciones)
     else [(head combinaciones)] ++ cleanLineBreaks (tail combinaciones)
+    
 
 
 --E: Una linea y un Int
@@ -354,8 +357,21 @@ insertBlanksAux limite linea res =
 
 divideLinesInText :: Int -> Line -> Bool -> HypMap -> [Line]
 divideLinesInText limit [] x map = []
-divideLinesInText limit line True map = [fst(head(lineBreaks map limit line))] ++ divideLinesInText limit (snd(head(lineBreaks map limit line))) True map
-divideLinesInText limit line False map =  [fst(last(lineBreaks map limit line))] ++ divideLinesInText limit (snd(last(lineBreaks map limit line))) False map
+divideLinesInText limit line True map = divideLinesInTextAux limit line map [] []
+divideLinesInText limit line False map =  [fst(breakLine limit line)] ++ divideLinesInText limit (snd(breakLine limit line)) False map
+
+--E: 
+--S: 
+--D:
+
+divideLinesInTextAux :: Int -> Line -> HypMap -> Line -> [Line] -> [Line]
+divideLinesInTextAux limite [] map temp res = (res ++ [temp])
+divideLinesInTextAux limite linea map temp res =
+    if limite - lineLength (temp ++ [head linea]) >= 0
+        then divideLinesInTextAux limite (tail linea) map (temp ++ [head linea]) res
+    else divideLinesInTextAux limite (snd(head(lineBreaks enHyp limite (temp ++ [head linea])))++(tail linea)) map [] (res++[fst(head(lineBreaks enHyp limite (temp ++ [head linea])))])
+
+
 
 
 --E: 
@@ -370,9 +386,15 @@ adjustLines limite lineas True =
         then [insertBlanks (limite - lineLength (head lineas)) (head lineas)] ++ adjustLines limite (tail lineas) True
     else [(head lineas)] ++ adjustLines limite (tail lineas) True
 
+--E: 
+--S: 
+--D: 
 
 lines2String :: [Line] -> [String]
 lines2String [] = [] 
 lines2String lineas = [line2String (head lineas)] ++ lines2String (tail lineas)
 
-    
+
+
+
+
