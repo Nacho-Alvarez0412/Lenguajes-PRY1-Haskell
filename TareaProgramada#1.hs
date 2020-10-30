@@ -360,9 +360,9 @@ divideLinesInText limit [] x map = []
 divideLinesInText limit line True map = divideLinesInTextAux limit line map [] []
 divideLinesInText limit line False map =  [fst(breakLine limit line)] ++ divideLinesInText limit (snd(breakLine limit line)) False map
 
---E: 
---S: 
---D:
+--E: Int, 2 Line, HypMap, Array de Lineas
+--S: Array de Lineas
+--D: Dada un mapa un limite y una linea te separab eltexto para calzar la linea
 
 divideLinesInTextAux :: Int -> Line -> HypMap -> Line -> [Line] -> [Line]
 divideLinesInTextAux limite [] map temp res = (res ++ [temp])
@@ -370,13 +370,13 @@ divideLinesInTextAux limite linea map temp res =
     if limite - lineLength (temp ++ [head linea]) >= 0
         then divideLinesInTextAux limite (tail linea) map (temp ++ [head linea]) res
     else divideLinesInTextAux limite (snd(head(lineBreaks enHyp limite (temp ++ [head linea])))++(tail linea)) map [] (res++[fst(head(lineBreaks enHyp limite (temp ++ [head linea])))])
+-- (snd(head(lineBreaks enHyp limite (temp ++ [head linea]))) -> Es el elemento que sobra al aplicar lineBreaks
+-- (res++[fst(head(lineBreaks enHyp limite (temp ++ [head linea])))]) -> Es el primer elemento al aplicar lineBreaks
 
 
-
-
---E: 
---S: 
---D: 
+--E: Int, 2 Line, HypMap, Array de Lineas
+--S: Array de Lineas
+--D: Dada un mapa un limite y una linea te separab eltexto para calzar la linea
 
 adjustLines :: Int -> [Line] -> Bool -> [Line]
 adjustLines limite lineas False = lineas
@@ -386,9 +386,9 @@ adjustLines limite lineas True =
         then [insertBlanks (limite - lineLength (head lineas)) (head lineas)] ++ adjustLines limite (tail lineas) True
     else [(head lineas)] ++ adjustLines limite (tail lineas) True
 
---E: 
---S: 
---D: 
+--E: Un Array de Lineas
+--S: Un Array de String
+--D: Toma una Linea y la convierte en String
 
 lines2String :: [Line] -> [String]
 lines2String [] = [] 
