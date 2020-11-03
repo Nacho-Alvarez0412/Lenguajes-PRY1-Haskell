@@ -1,10 +1,18 @@
-module Menu where
+-----------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                                                                                           --
+--                                                                                                                                           --
+--                                                         TAREA PROGRAMADA # 1                                                              --
+--                                                               HASKELLL                                                                    --
+--  Ignacio Álvarez Barrantes                                                                                                                --
+--  2019039643                                                                                                                               --
+-----------------------------------------------------------------------------------------------------------------------------------------------
 
+-- IMPORTS
 import Data.Map.Internal 
 import qualified Data.Map as Map
 import TDAs (HypMap)
+import Alineador
 import System.IO
---import TextAligning ()
 import Prelude hiding (filter, lookup, map, null)
 import Data.List as List
 import System.IO as SysIO
@@ -23,12 +31,14 @@ main = do
 --  2. lee un comando
 --  3. Ejecuta un comando que produce un nuevo Estado
 --  4. Se invoca recursivamente con el nuevo Estado.
+
 mainloop :: Estado -> IO ()
 mainloop estado = do
   putStr ">> "
   inpStr <- getLine
   let tokens = words inpStr
   let comando = tokens !! 0
+
   -- Check for command
   case comando of
 
@@ -45,7 +55,6 @@ mainloop estado = do
 
     "show" -> do
       SysIO.putStrLn (List.unlines [(fst x) ++ " " ++ (List.intercalate "-" (snd x)) | x <- Map.toList estado])
-      putStrLn (show estado)
       mainloop estado
 
     "ins" -> do
@@ -62,7 +71,30 @@ mainloop estado = do
       outh <- openFile nombreArchivo WriteMode 
       descargar outh mapFormatted
       hClose outh
-      mainloop estado    
+      mainloop estado
+
+    "split" -> do 
+      
+      let cantidad = read (tokens !! 1) :: Int
+      let separar = head [if c == 'n' then False else True | c <- (tokens !! 2)]
+      let alinear = head [if c == 'n' then False else True | c <- (tokens !! 3)]
+      let text = intercalate " " (List.drop 4 tokens)
+
+      let texto = Alineador.separarYalinear cantidad separar alinear text
+      putStrLn (show texto)
+      mainloop estado
+
+    "splitf" -> do 
+      
+      let cantidad = read (tokens !! 1) :: Int
+      let separar = head [if c == 'n' then False else True | c <- (tokens !! 2)]
+      let alinear = head [if c == 'n' then False else True | c <- (tokens !! 3)]
+      let text = intercalate " " (List.drop 4 tokens)
+
+      let texto = Alineador.separarYalinear cantidad separar alinear text
+      putStrLn (show texto)
+      mainloop estado
+      
 
     "exit" -> do
       putStrLn "Saliendo..."
