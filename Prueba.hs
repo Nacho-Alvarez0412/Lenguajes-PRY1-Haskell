@@ -81,7 +81,8 @@ mainloop estado = do
       let text = intercalate " " (List.drop 4 tokens)
 
       let texto = Alineador.separarYalinear cantidad separar alinear text
-      putStrLn (show texto)
+      let finalText = intercalate "\n" texto
+      putStrLn (finalText)
       mainloop estado
 
     "splitf" -> do 
@@ -89,10 +90,15 @@ mainloop estado = do
       let cantidad = read (tokens !! 1) :: Int
       let separar = head [if c == 'n' then False else True | c <- (tokens !! 2)]
       let alinear = head [if c == 'n' then False else True | c <- (tokens !! 3)]
-      let text = intercalate " " (List.drop 4 tokens)
+      handle <- openFile (tokens !! 4) ReadMode
+      text <- hGetContents handle
 
       let texto = Alineador.separarYalinear cantidad separar alinear text
-      putStrLn (show texto)
+      let finalText = intercalate "\n" texto
+      putStrLn (finalText)
+      
+      let saveSpot = getSaveSpot tokens
+      saveText saveSpot finalText
       mainloop estado
       
 
@@ -135,3 +141,14 @@ descargar outh ((k,v):kvs) = do hPutStrLn outh $ k ++ " " ++ (show v)
 
 formatTuple :: (String,[String]) -> (String,String)
 formatTuple tuple = (fst tuple,intercalate "-" (snd tuple))
+
+getSaveSpot :: [String] -> String
+getSaveSpot tokens =
+  if List.length tokens == 5
+    then ""
+  else tokens !! 5
+
+saveText :: String -> String -> IO()
+saveText "" text = return ()
+saveText path text = res where
+  res = writeFile path text
