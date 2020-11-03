@@ -17,15 +17,9 @@ data Token = Word String |
 -- Line
 type Line = [Token]
 
--- Mapeado de Separaciones Correctas
+-- Mapeado de Separaciones Correctasla
 type HypMap = Map.Map String [String]
 
 -- Ejemplo de Mapa creado 
 enHyp :: HypMap
-enHyp = Map.fromList [ ("controla",["con","tro","la"]), 
-                            ("futuro",["fu","tu","ro"]),
-                            ("presente",["pre","sen","te"]),
-                            ("aquel",["a","quel"]),
-                            ("el",["el"]),
-                            ("pasado",["pa","sa","do"]),
-                            ("Quien",["Quien"])]
+enHyp = Map.fromList [("aquel",["a","quel"]),("asi",["a","si"]),("bestias",["bes","tias"]),("celebro",["ce","le","bro"]),("controla",["con","tro","la"]),("demasiado",["de","ma","sia","do"]),("dormir",["dor","mir"]),("el",["el"]),("enflaquece",["en","fla","que","ce"]),("fermosura",["fer","mo","su","ra"]),("futuro",["fu","tu","ro"]),("hace",["ha","ce"]),("hicieron",["hi","cie","ron"]),("hombres",["hom","bres"]),("leer",["le","er"]),("manera",["ma","ne","ra"]),("mucho",["mu","cho"]),("para",["pa","ra"]),("pasado",["pa","sa","do"]),("pero",["pe","ro"]),("poco",["po","co"]),("presente",["pre","sen","te"]),("quejo",["que","jo"]),("quien",["quien"]),("razon",["ra","zon"]),("seco",["se","co"]),("sienten",["sien","ten"]),("sino",["si","no"]),("sinrazon",["sin","ra","zon"]),("tristezas",["tris","te","zas"]),("vuelven",["vuel","ven"]),("vuestra",["vues","tra"])]

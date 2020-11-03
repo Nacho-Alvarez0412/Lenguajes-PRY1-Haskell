@@ -51,6 +51,7 @@ mainloop estado = do
       nuevoEstado <- loadDiccionario inh estado
       hClose inh
       putStrLn (("Diccionario cargado ") ++ (show (length (Map.keys nuevoEstado))) ++ " palabras cargadas")
+      
       mainloop nuevoEstado
 
     "show" -> do
@@ -80,7 +81,7 @@ mainloop estado = do
       let alinear = head [if c == 'n' then False else True | c <- (tokens !! 3)]
       let text = intercalate " " (List.drop 4 tokens)
 
-      let texto = Alineador.separarYalinear cantidad separar alinear text
+      let texto = Alineador.separarYalinear cantidad separar alinear text estado
       let finalText = intercalate "\n" texto
       putStrLn (finalText)
       mainloop estado
@@ -93,7 +94,7 @@ mainloop estado = do
       handle <- openFile (tokens !! 4) ReadMode
       text <- hGetContents handle
 
-      let texto = Alineador.separarYalinear cantidad separar alinear text
+      let texto = Alineador.separarYalinear cantidad separar alinear text estado
       let finalText = intercalate "\n" texto
       putStrLn (finalText)
       

@@ -108,9 +108,10 @@ hyphenate map palabra = res where
     strPalabra = getString palabra
     cleanPalabra = extractPunctuation strPalabra ""
     division = Map.lookup (fst cleanPalabra) map
-    strWord = maybe2StringArray division
+    strWord = maybe2StringArray division (fst cleanPalabra)
     finalWord = addPunctuation strWord (snd cleanPalabra)
-    res = hyphenateAux finalWord
+    check = hyphenateAux finalWord
+    res = hyphenChecker check (head(finalWord))
 
 
 -------------------------------------------------------------------------------------------------------------------------------------
@@ -149,11 +150,12 @@ insertBlanks limit linea =
 --S: Una Lista de Strings
 --D: Dada una linea y un limite devuelve una lista de tiras de caracteres que no sean más largas que el tamaño especificado
 
-separarYalinear :: Int -> Bool -> Bool -> String -> [String]
-separarYalinear limite separar ajustar texto = res where
+separarYalinear :: Int -> Bool -> Bool -> String -> HypMap-> [String]
+separarYalinear limite separar ajustar texto map = res where
     linea = string2Line texto
-    divLines = divideLinesInText limite linea separar enHyp
-    adjustedLines = adjustLines limite divLines ajustar
+    divLines = divideLinesInText limite linea separar map
+    cleanLines =  cleanFromBlanks divLines
+    adjustedLines = adjustLines limite cleanLines ajustar
     fixedText = lines2String adjustedLines
     res = fixedText
 
@@ -244,11 +246,11 @@ mergerCleaner lista = [(intercalate "" (fst (head lista)) , intercalate "" (snd 
 --S: Un array de string
 --D: Dado un Maybe [String] verifica su valor y lo trasnforma
 
-maybe2StringArray :: Maybe [String] -> [String]
-maybe2StringArray divWord  =
+maybe2StringArray :: Maybe [String] -> String -> [String]
+maybe2StringArray divWord word  =
     if Maybe.isJust divWord
         then Maybe.fromJust divWord
-    else []
+    else [word]
 
 --E: Una lista de tuples de Strings
 --S: Una lista de Tuplas de Tokens [(Token,Token)]
@@ -386,6 +388,22 @@ adjustLines limite lineas True =
 lines2String :: [Line] -> [String]
 lines2String [] = [] 
 lines2String lineas = [line2String (head lineas)] ++ lines2String (tail lineas)
+
+
+hyphenChecker :: [(Token,Token)] -> String -> [(Token,Token)]
+hyphenChecker finalWrd provitional = 
+    if length finalWrd == 0
+        then [(Blank,Word provitional)]
+    else finalWrd
+
+cleanFromBlanks :: [Line] -> [Line]
+cleanFromBlanks lines = map cleanFromBlanksAux lines
+
+cleanFromBlanksAux :: Line -> Line
+cleanFromBlanksAux linea =
+    if isBlank (last linea)
+        then cleanFromBlanksAux (init linea)
+    else linea
 
 
 
