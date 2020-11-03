@@ -1,11 +1,14 @@
 module Menu where
 
-import Data.Map ()
+import Data.Map.Internal 
 import qualified Data.Map as Map
 import TDAs (HypMap)
 import System.IO
 --import TextAligning ()
 import Prelude hiding (filter, lookup, map, null)
+import Data.List as List
+import System.IO as SysIO
+
 
 type Estado = HypMap
 
@@ -28,6 +31,7 @@ mainloop estado = do
   let comando = tokens !! 0
   -- Check for command
   case comando of
+
     "load" -> do
       -- Get file name
       let nombreArchivo = (tokens !! 1)
@@ -38,9 +42,28 @@ mainloop estado = do
       hClose inh
       putStrLn (("Diccionario cargado ") ++ (show (length (Map.keys nuevoEstado))) ++ " palabras cargadas")
       mainloop nuevoEstado
+
     "show" -> do
+      SysIO.putStrLn (List.unlines [(fst x) ++ " " ++ (List.intercalate "-" (snd x)) | x <- Map.toList estado])
       putStrLn (show estado)
       mainloop estado
+
+    "ins" -> do
+      let word = (tokens !! 1)
+      let silabas = (tokens !! 2)
+      let silabasSep = (words [if c == '-' then ' ' else c | c <- silabas])
+      let nuevoEstado = addToken estado word silabasSep
+      putStrLn (("Palabra ")++word++(" agregada"))
+      mainloop nuevoEstado
+
+    "save" -> do
+      let nombreArchivo = (tokens !! 1)
+      let mapFormatted = (List.map formatTuple (sort (toList estado)))
+      outh <- openFile nombreArchivo WriteMode 
+      descargar outh mapFormatted
+      hClose outh
+      mainloop estado    
+
     "exit" -> do
       putStrLn "Saliendo..."
     _ -> do
@@ -67,6 +90,16 @@ loadDiccionario inh estado = do
       inpStr <- hGetLine inh
       let fileLine = words (inpStr)
       let silabas = fileLine !! 1
+      let silabasSep = (words [if c == '-' then ' ' else c | c <- silabas])
       -- Insert new slot for diccionary
-      let nuevoEstado = addToken estado (head fileLine) (words [if c == ',' then ' ' else c | c <- silabas])
+      let nuevoEstado = addToken estado (head fileLine) silabasSep
       loadDiccionario inh nuevoEstado
+
+-- descargar :: Handle -> [(String,Int)] -> IO ()
+descargar outh [] = return ()
+descargar outh ((k,v):kvs) = do hPutStrLn outh $ k ++ " " ++ (show v)
+                                descargar outh kvs
+
+
+formatTuple :: (String,[String]) -> (String,String)
+formatTuple tuple = (fst tuple,intercalate "-" (snd tuple))
