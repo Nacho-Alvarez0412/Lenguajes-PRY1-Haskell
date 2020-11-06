@@ -16,6 +16,9 @@ import System.IO
 import Prelude hiding (filter, lookup, map, null)
 import Data.List as List
 import System.IO as SysIO
+import System.Directory
+
+
 
 
 type Estado = HypMap
@@ -45,14 +48,21 @@ mainloop estado = do
     "load" -> do
       -- Get file name
       let nombreArchivo = (tokens !! 1)
-      -- Create handle
-      inh <- openFile nombreArchivo ReadMode
-      -- New state
-      nuevoEstado <- loadDiccionario inh estado
-      hClose inh
-      putStrLn (("Diccionario cargado ") ++ (show (length (Map.keys nuevoEstado))) ++ " palabras cargadas")
-      
-      mainloop nuevoEstado
+
+      fileExists <- doesFileExist nombreArchivo
+
+      if fileExists then do
+        -- Create handle
+        inh <- openFile nombreArchivo ReadMode
+        -- New state
+        nuevoEstado <- loadDiccionario inh estado
+        hClose inh
+        putStrLn (("Diccionario cargado ") ++ (show (length (Map.keys nuevoEstado))) ++ " palabras cargadas")
+        mainloop nuevoEstado
+
+      else do
+        putStrLn ("Diccionario ingresado no existe")
+        mainloop estado
 
     "show" -> do
       SysIO.putStrLn (List.unlines [(fst x) ++ " " ++ (List.intercalate "-" (snd x)) | x <- Map.toList estado])
@@ -91,16 +101,28 @@ mainloop estado = do
       let cantidad = read (tokens !! 1) :: Int
       let separar = head [if c == 'n' then False else True | c <- (tokens !! 2)]
       let alinear = head [if c == 'n' then False else True | c <- (tokens !! 3)]
-      handle <- openFile (tokens !! 4) ReadMode
-      text <- hGetContents handle
 
-      let texto = Alineador.separarYalinear cantidad separar alinear text estado
-      let finalText = intercalate "\n" texto
-      putStrLn (finalText)
-      
-      let saveSpot = getSaveSpot tokens
-      saveText saveSpot finalText
-      mainloop estado
+      let fileName = (tokens !! 4)
+
+      fileExists <- doesFileExist fileName
+
+      if fileExists then do
+
+        handle <- openFile fileName ReadMode
+        text <- hGetContents handle
+
+        let texto = Alineador.separarYalinear cantidad separar alinear text estado
+        let finalText = intercalate "\n" texto
+        putStrLn (finalText)
+        
+        let saveSpot = getSaveSpot tokens
+        saveText saveSpot finalText
+        mainloop estado
+
+      else  do
+        putStrLn ("El archivo ingresado no existe")
+        mainloop estado
+
       
 
     "exit" -> do

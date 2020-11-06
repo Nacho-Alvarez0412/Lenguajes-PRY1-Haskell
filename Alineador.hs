@@ -111,7 +111,8 @@ hyphenate map palabra = res where
     strWord = maybe2StringArray division (fst cleanPalabra)
     finalWord = addPunctuation strWord (snd cleanPalabra)
     check = hyphenateAux finalWord
-    res = hyphenChecker check (head(finalWord))
+    inv = hyphenChecker check (head(finalWord))
+    res = inv
 
 
 -------------------------------------------------------------------------------------------------------------------------------------
