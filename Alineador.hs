@@ -112,7 +112,7 @@ hyphenate map palabra = res where
     finalWord = addPunctuation strWord (snd cleanPalabra)
     check = hyphenateAux finalWord
     inv = hyphenChecker check (head(finalWord))
-    res = inv
+    res = reverse inv
 
 
 -------------------------------------------------------------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ divideLinesInTextAux limite [] map temp res = (res ++ [temp])
 divideLinesInTextAux limite linea map temp res =
     if limite - lineLength (temp ++ [head linea]) >= 0
         then divideLinesInTextAux limite (tail linea) map (temp ++ [head linea]) res
-    else divideLinesInTextAux limite (snd(head(lineBreaks enHyp limite (temp ++ [head linea])))++(tail linea)) map [] (res++[fst(head(lineBreaks enHyp limite (temp ++ [head linea])))])
+    else divideLinesInTextAux limite (snd(head(lineBreaks map limite (temp ++ [head linea])))++(tail linea)) map [] (res++[fst(head(lineBreaks map limite (temp ++ [head linea])))])
 -- (snd(head(lineBreaks enHyp limite (temp ++ [head linea]))) -> Es el elemento que sobra al aplicar lineBreaks
 -- (res++[fst(head(lineBreaks enHyp limite (temp ++ [head linea])))]) -> Es el primer elemento al aplicar lineBreaks
 
