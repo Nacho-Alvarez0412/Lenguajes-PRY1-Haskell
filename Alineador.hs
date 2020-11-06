@@ -320,8 +320,9 @@ lineBreaksAux limit lineas = [breakLine limit (head lineas)] ++ lineBreaksAux li
 --D: Limpia elo resultado de todas aquellas combinaciones no válidas
 
 cleanLineBreaks :: [(Line,Line)] -> [(Line,Line)]
+cleanLineBreaks [] = []
 cleanLineBreaks combinaciones = 
-    if List.null combinaciones 
+    if (snd (head combinaciones)) == []
         then []
     else if List.length (fst (head combinaciones)) < 2
         then combinaciones
@@ -405,6 +406,7 @@ cleanFromBlanksAux linea =
     if isBlank (last linea)
         then cleanFromBlanksAux (init linea)
     else linea
+
 
 
 

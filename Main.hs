@@ -17,6 +17,8 @@ import Prelude hiding (filter, lookup, map, null)
 import Data.List as List
 import System.IO as SysIO
 import System.Directory
+import Data.Char as Char (ord)
+
 
 
 
@@ -93,7 +95,8 @@ mainloop estado = do
 
       let texto = Alineador.separarYalinear cantidad separar alinear text estado
       let finalText = intercalate "\n" texto
-      putStrLn (finalText)
+      let normalizedText = normalizeText finalText
+      putStrLn (normalizedText)
       mainloop estado
 
     "splitf" -> do 
@@ -113,10 +116,11 @@ mainloop estado = do
 
         let texto = Alineador.separarYalinear cantidad separar alinear text estado
         let finalText = intercalate "\n" texto
-        putStrLn (finalText)
+        let normalizedText = normalizeText finalText
+        putStrLn (normalizedText)
         
         let saveSpot = getSaveSpot tokens
-        saveText saveSpot finalText
+        saveText saveSpot (unnormalizeText normalizedText)
         mainloop estado
 
       else  do
@@ -175,3 +179,25 @@ saveText :: String -> String -> IO()
 saveText "" text = return ()
 saveText path text = res where
   res = writeFile path text
+
+-- Returns a string replacing the decomposed ascii for accents with the composed ascii for accents
+normalizeText :: String -> String
+normalizeText [] = []
+normalizeText (x:xs)
+    | Char.ord x == 9500 && Char.ord (List.head xs) == 237 = "á" ++ (normalizeText (List.drop 1 xs))
+    | Char.ord x == 9500 && Char.ord (List.head xs) == 8976 = "é" ++ (normalizeText (List.drop 1 xs))
+    | Char.ord x == 9500 && Char.ord (List.head xs) == 161 = "í" ++ (normalizeText (List.drop 1 xs))
+    | Char.ord x == 9500 && Char.ord (List.head xs) == 9474 = "ó" ++ (normalizeText (List.drop 1 xs))
+    | Char.ord x == 9500 && Char.ord (List.head xs) == 9553 = "ú" ++ (normalizeText (List.drop 1 xs))
+    | otherwise = [x] ++ normalizeText xs
+
+-- Returns a string replacing the composed ascii for accents with the decomposed ascii for accents
+unnormalizeText :: String -> String
+unnormalizeText [] = []
+unnormalizeText (x:xs)
+    | x == 'á' = "\9500\237" ++ unnormalizeText xs
+    | x == 'é' = "\9500\8976" ++ unnormalizeText xs
+    | x == 'í' = "\9500\161" ++ unnormalizeText xs
+    | x == 'ó' = "\9500\9474" ++ unnormalizeText xs
+    | x == 'ú' = "\9500\9553" ++ unnormalizeText xs
+    | otherwise = [x] ++ unnormalizeText xs
