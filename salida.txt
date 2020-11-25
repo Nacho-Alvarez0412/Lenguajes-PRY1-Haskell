@@ -1,0 +1,11 @@
+Utilice variables aleatorias, indicado-
+res, para resolver el siguiente proble-
+ma, el cual se conoce como el hatcheck
+problem. Cada uno de los n clientes le
+entrega un sombrero a una persona que
+los guarda en la entrada de un restau-
+rante. Esta persona luego devuelve los
+sombreros a los clientes en un orden
+aleatorio. Dar la cantidad de clientes
+que se espera que obtengan de vuelta su
+propio sombrero.
